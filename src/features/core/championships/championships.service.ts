@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Championship } from './entities/championship.entity';
-import { CreateChampionshipDto } from './dto/create-championship.dto';
-import { UpdateChampionshipDto } from './dto/update-championship.dto';
+import { CreateChampionshipDto } from './dto/create_championship.dto';
+import { UpdateChampionshipDto } from './dto/update_championship.dto';
 
 @Injectable()
 export class ChampionshipsService {

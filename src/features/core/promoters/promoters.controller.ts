@@ -8,8 +8,8 @@ import {
   Delete,
 } from '@nestjs/common';
 import { PromotersService } from './promoters.service';
-import { CreatePromoterDto } from './dto/create-promoter.dto';
-import { UpdatePromoterDto } from './dto/update-promoter.dto';
+import { CreatePromoterDto } from './dto/create_promoter.dto';
+import { UpdatePromoterDto } from './dto/update_promoter.dto';
 
 @Controller('promoters')
 export class PromotersController {

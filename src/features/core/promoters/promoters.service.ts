@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Promoter } from './entities/promoter.entity';
-import { CreatePromoterDto } from './dto/create-promoter.dto';
-import { UpdatePromoterDto } from './dto/update-promoter.dto';
+import { CreatePromoterDto } from './dto/create_promoter.dto';
+import { UpdatePromoterDto } from './dto/update_promoter.dto';
 
 @Injectable()
 export class PromotersService {

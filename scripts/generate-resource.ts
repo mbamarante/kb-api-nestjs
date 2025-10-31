@@ -99,6 +99,13 @@ class ResourceGenerator {
       .replace(/^-/, '');
   }
 
+  private toSnakeCase(str: string): string {
+    return str
+      .replace(/([A-Z])/g, '_$1')
+      .toLowerCase()
+      .replace(/^_/, '');
+  }
+
   private getTypeScriptType(mysqlType: string, nullable: boolean): string {
     const type = mysqlType.toLowerCase();
     let tsType = 'string';
@@ -186,7 +193,11 @@ class ResourceGenerator {
     return 'varchar';
   }
 
-  private generateEntity(tableInfo: TableInfo): string {
+  private generateEntity(
+    tableInfo: TableInfo,
+    currentCategory?: string,
+    currentFeaturePath?: string,
+  ): string {
     const entityName = this.toPascalCase(tableInfo.tableName);
     const className = entityName.endsWith('s')
       ? entityName.slice(0, -1)
@@ -214,6 +225,28 @@ class ResourceGenerator {
     const relatedEntityImports: string[] = [];
     const relatedEntities = new Map<string, string>(); // tableName -> className
 
+    // Map common table names to their feature categories
+    // This helps determine if we should use @features alias or relative path
+    const tableToCategory: Record<string, string> = {
+      users: 'accounts',
+      user: 'accounts', // Handle singular form
+      promoters: 'core',
+      championships: 'core',
+      challenges: 'core',
+      challenges_body_weight: 'core',
+      challenges_style: 'core',
+      challenges_type: 'core',
+      ages: 'core',
+      athletes: 'core',
+      weights: 'core',
+      registrations: 'core',
+      registration_challenges: 'core',
+      // Handle variations and common typos
+      countrie: 'core', // if exists, map to core (or adjust as needed)
+      countries: 'core',
+      country: 'core',
+    };
+
     if (hasForeignKeys) {
       tableInfo.foreignKeys.forEach((fk) => {
         const refTableName = fk.referencedTableName;
@@ -224,10 +257,39 @@ class ResourceGenerator {
 
         if (!relatedEntities.has(refTableName)) {
           relatedEntities.set(refTableName, refClassName);
-          // Generate import path - user may need to adjust based on actual structure
-          const refKebabName = this.toKebabCase(refClassName);
+
+          // Normalize table name (handle singular/plural variations)
+          let normalizedTableName = refTableName;
+          // Map singular 'user' to plural 'users'
+          if (refTableName === 'user') {
+            normalizedTableName = 'users';
+          }
+
+          // Determine the directory name for the referenced table (use normalized plural table name)
+          const refDirectoryName = this.toSnakeCase(normalizedTableName);
+          const refEntityFileName = this.toSnakeCase(refClassName);
+
+          // Determine if we should use alias or relative path
+          const refCategory =
+            tableToCategory[normalizedTableName] ||
+            tableToCategory[refTableName];
+          const sameCategory =
+            currentCategory && refCategory === currentCategory;
+
+          let importPath: string;
+          if (sameCategory) {
+            // Same category: use relative path (use snake_case for directory names)
+            importPath = `../${refDirectoryName}/entities/${refEntityFileName}.entity`;
+          } else if (refCategory) {
+            // Different category or no current category: use @features alias (use snake_case for directory names)
+            importPath = `@features/${refCategory}/${refDirectoryName}/entities/${refEntityFileName}.entity`;
+          } else {
+            // Fallback: assume same category if no mapping found (use snake_case)
+            importPath = `../${refDirectoryName}/entities/${refEntityFileName}.entity`;
+          }
+
           relatedEntityImports.push(
-            `import { ${refClassName} } from '../${refKebabName}/entities/${refKebabName}.entity';`,
+            `import { ${refClassName} } from '${importPath}';`,
           );
         }
       });
@@ -371,7 +433,7 @@ class ResourceGenerator {
     const className = entityName.endsWith('s')
       ? entityName.slice(0, -1)
       : entityName;
-    return `import { PartialType } from '@nestjs/mapped-types';\nimport { Create${this.toPascalCase(className)}Dto } from './create-${this.toKebabCase(className)}.dto';\n\nexport class Update${this.toPascalCase(className)}Dto extends PartialType(Create${this.toPascalCase(className)}Dto) {}\n`;
+    return `import { PartialType } from '@nestjs/mapped-types';\nimport { Create${this.toPascalCase(className)}Dto } from './create_${this.toSnakeCase(className)}.dto';\n\nexport class Update${this.toPascalCase(className)}Dto extends PartialType(Create${this.toPascalCase(className)}Dto) {}\n`;
   }
 
   private generateService(tableInfo: TableInfo): string {
@@ -387,7 +449,7 @@ class ResourceGenerator {
     const entityVarName = this.toCamelCase(entityClassName);
     const serviceVarName = this.toCamelCase(entityName) + 'Service';
 
-    return `import { Injectable } from '@nestjs/common';\nimport { InjectRepository } from '@nestjs/typeorm';\nimport { Repository } from 'typeorm';\nimport { ${entityClassName} } from './entities/${this.toKebabCase(entityClassName)}.entity';\nimport { ${dtoName} } from './dto/create-${this.toKebabCase(entityClassName)}.dto';\nimport { ${updateDtoName} } from './dto/update-${this.toKebabCase(entityClassName)}.dto';\n\n@Injectable()\nexport class ${serviceName} {\n  constructor(\n    @InjectRepository(${entityClassName})\n    private ${entityVarName}Repository: Repository<${entityClassName}>,\n  ) {}\n\n  create(create${entityClassName}Dto: ${dtoName}): Promise<${entityClassName}> {\n    const ${entityVarName} = this.${entityVarName}Repository.create(create${entityClassName}Dto);\n    return this.${entityVarName}Repository.save(${entityVarName});\n  }\n\n  findAll(): Promise<${entityClassName}[]> {\n    return this.${entityVarName}Repository.find();\n  }\n\n  findOne(id: number): Promise<${entityClassName}> {\n    return this.${entityVarName}Repository.findOne({ where: { id } });\n  }\n\n  async update(id: number, update${entityClassName}Dto: ${updateDtoName}): Promise<${entityClassName}> {\n    await this.${entityVarName}Repository.update(id, update${entityClassName}Dto);\n    return this.findOne(id);\n  }\n\n  async remove(id: number): Promise<void> {\n    await this.${entityVarName}Repository.delete(id);\n  }\n}\n`;
+    return `import { Injectable } from '@nestjs/common';\nimport { InjectRepository } from '@nestjs/typeorm';\nimport { Repository } from 'typeorm';\nimport { ${entityClassName} } from './entities/${this.toSnakeCase(entityClassName)}.entity';\nimport { ${dtoName} } from './dto/create_${this.toSnakeCase(entityClassName)}.dto';\nimport { ${updateDtoName} } from './dto/update_${this.toSnakeCase(entityClassName)}.dto';\n\n@Injectable()\nexport class ${serviceName} {\n  constructor(\n    @InjectRepository(${entityClassName})\n    private ${entityVarName}Repository: Repository<${entityClassName}>,\n  ) {}\n\n  create(create${entityClassName}Dto: ${dtoName}): Promise<${entityClassName}> {\n    const ${entityVarName} = this.${entityVarName}Repository.create(create${entityClassName}Dto);\n    return this.${entityVarName}Repository.save(${entityVarName});\n  }\n\n  findAll(): Promise<${entityClassName}[]> {\n    return this.${entityVarName}Repository.find();\n  }\n\n  findOne(id: number): Promise<${entityClassName}> {\n    return this.${entityVarName}Repository.findOne({ where: { id } });\n  }\n\n  async update(id: number, update${entityClassName}Dto: ${updateDtoName}): Promise<${entityClassName}> {\n    await this.${entityVarName}Repository.update(id, update${entityClassName}Dto);\n    return this.findOne(id);\n  }\n\n  async remove(id: number): Promise<void> {\n    await this.${entityVarName}Repository.delete(id);\n  }\n}\n`;
   }
 
   private generateController(tableInfo: TableInfo): string {
@@ -404,7 +466,7 @@ class ResourceGenerator {
     const updateDtoName = `Update${entityClassName}Dto`;
     const routeName = this.toKebabCase(tableInfo.tableName);
 
-    return `import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';\nimport { ${serviceName} } from './${this.toKebabCase(entityName)}.service';\nimport { ${dtoName} } from './dto/create-${this.toKebabCase(entityClassName)}.dto';\nimport { ${updateDtoName} } from './dto/update-${this.toKebabCase(entityClassName)}.dto';\n\n@Controller('${routeName}')\nexport class ${controllerName} {\n  constructor(private readonly ${serviceVarName}: ${serviceName}) {}\n\n  @Post()\n  create(@Body() create${entityClassName}Dto: ${dtoName}) {\n    return this.${serviceVarName}.create(create${entityClassName}Dto);\n  }\n\n  @Get()\n  findAll() {\n    return this.${serviceVarName}.findAll();\n  }\n\n  @Get(':id')\n  findOne(@Param('id') id: string) {\n    return this.${serviceVarName}.findOne(+id);\n  }\n\n  @Patch(':id')\n  update(@Param('id') id: string, @Body() update${entityClassName}Dto: ${updateDtoName}) {\n    return this.${serviceVarName}.update(+id, update${entityClassName}Dto);\n  }\n\n  @Delete(':id')\n  remove(@Param('id') id: string) {\n    return this.${serviceVarName}.remove(+id);\n  }\n}\n`;
+    return `import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';\nimport { ${serviceName} } from './${this.toSnakeCase(entityName)}.service';\nimport { ${dtoName} } from './dto/create_${this.toSnakeCase(entityClassName)}.dto';\nimport { ${updateDtoName} } from './dto/update_${this.toSnakeCase(entityClassName)}.dto';\n\n@Controller('${routeName}')\nexport class ${controllerName} {\n  constructor(private readonly ${serviceVarName}: ${serviceName}) {}\n\n  @Post()\n  create(@Body() create${entityClassName}Dto: ${dtoName}) {\n    return this.${serviceVarName}.create(create${entityClassName}Dto);\n  }\n\n  @Get()\n  findAll() {\n    return this.${serviceVarName}.findAll();\n  }\n\n  @Get(':id')\n  findOne(@Param('id') id: string) {\n    return this.${serviceVarName}.findOne(+id);\n  }\n\n  @Patch(':id')\n  update(@Param('id') id: string, @Body() update${entityClassName}Dto: ${updateDtoName}) {\n    return this.${serviceVarName}.update(+id, update${entityClassName}Dto);\n  }\n\n  @Delete(':id')\n  remove(@Param('id') id: string) {\n    return this.${serviceVarName}.remove(+id);\n  }\n}\n`;
   }
 
   private generateModule(tableInfo: TableInfo): string {
@@ -418,7 +480,7 @@ class ResourceGenerator {
     const serviceName = `${entityName}Service`;
     const controllerName = `${entityName}Controller`;
 
-    return `import { Module } from '@nestjs/common';\nimport { TypeOrmModule } from '@nestjs/typeorm';\nimport { ${serviceName} } from './${this.toKebabCase(entityName)}.service';\nimport { ${controllerName} } from './${this.toKebabCase(entityName)}.controller';\nimport { ${entityClassName} } from './entities/${this.toKebabCase(entityClassName)}.entity';\n\n@Module({\n  imports: [TypeOrmModule.forFeature([${entityClassName}])],\n  controllers: [${controllerName}],\n  providers: [${serviceName}],\n  exports: [${serviceName}],\n})\nexport class ${moduleName} {}\n`;
+    return `import { Module } from '@nestjs/common';\nimport { TypeOrmModule } from '@nestjs/typeorm';\nimport { ${serviceName} } from './${this.toSnakeCase(entityName)}.service';\nimport { ${controllerName} } from './${this.toSnakeCase(entityName)}.controller';\nimport { ${entityClassName} } from './entities/${this.toSnakeCase(entityClassName)}.entity';\n\n@Module({\n  imports: [TypeOrmModule.forFeature([${entityClassName}])],\n  controllers: [${controllerName}],\n  providers: [${serviceName}],\n  exports: [${serviceName}],\n})\nexport class ${moduleName} {}\n`;
   }
 
   async generateResource(
@@ -433,13 +495,14 @@ class ResourceGenerator {
       ? entityName.slice(0, -1)
       : entityName;
     // Directory name: plural (users) - follows NestJS convention
-    const resourceKebabName = this.toKebabCase(tableName);
-    const entityKebabName = this.toKebabCase(className);
+    // Use snake_case for directory names to match existing structure
+    const resourceSnakeName = this.toSnakeCase(tableName);
+    const entitySnakeName = this.toSnakeCase(className);
 
     // Determine feature directory (use plural table name)
     const baseDir = category
-      ? path.join(process.cwd(), featurePath, category, resourceKebabName)
-      : path.join(process.cwd(), featurePath, resourceKebabName);
+      ? path.join(process.cwd(), featurePath, category, resourceSnakeName)
+      : path.join(process.cwd(), featurePath, resourceSnakeName);
     const featureDir = baseDir;
     const dtoDir = path.join(featureDir, 'dto');
     const entityDir = path.join(featureDir, 'entities');
@@ -452,35 +515,36 @@ class ResourceGenerator {
     });
 
     // File names: entity and DTOs use singular (user.entity.ts), service/controller/module use plural (users.service.ts)
+    // All file names use underscores (_) instead of hyphens (-)
 
     // Generate files
     fs.writeFileSync(
-      path.join(entityDir, `${entityKebabName}.entity.ts`),
-      this.generateEntity(tableInfo),
+      path.join(entityDir, `${entitySnakeName}.entity.ts`),
+      this.generateEntity(tableInfo, category, featurePath),
     );
 
     fs.writeFileSync(
-      path.join(dtoDir, `create-${entityKebabName}.dto.ts`),
+      path.join(dtoDir, `create_${entitySnakeName}.dto.ts`),
       this.generateCreateDto(tableInfo),
     );
 
     fs.writeFileSync(
-      path.join(dtoDir, `update-${entityKebabName}.dto.ts`),
+      path.join(dtoDir, `update_${entitySnakeName}.dto.ts`),
       this.generateUpdateDto(className),
     );
 
     fs.writeFileSync(
-      path.join(featureDir, `${resourceKebabName}.service.ts`),
+      path.join(featureDir, `${resourceSnakeName}.service.ts`),
       this.generateService(tableInfo),
     );
 
     fs.writeFileSync(
-      path.join(featureDir, `${resourceKebabName}.controller.ts`),
+      path.join(featureDir, `${resourceSnakeName}.controller.ts`),
       this.generateController(tableInfo),
     );
 
     fs.writeFileSync(
-      path.join(featureDir, `${resourceKebabName}.module.ts`),
+      path.join(featureDir, `${resourceSnakeName}.module.ts`),
       this.generateModule(tableInfo),
     );
 
