@@ -507,7 +507,7 @@ async function main() {
       'Example: npm run generate:resource -- users products --category=core',
     );
     console.log(
-      'Example: npm run generate:resource -- users --feature-path=src/features/user-management',
+      'Example: npm run generate:resource -- users --feature-path=src/features/accounts',
     );
     process.exit(1);
   }

@@ -31,7 +31,7 @@ src/
 │ └── dto/
 │ ├── pagination.dto.ts
 │ └── response.dto.ts
-├── infrastructure/ # Detalhes técnicos
+├── infra/ # Detalhes técnicos
 │ ├── database/
 │ │ ├── database.module.ts
 │ │ └── database.providers.ts
@@ -55,7 +55,7 @@ src/
 
 ```
 features/           | Lógica de negócio
-infrastructure/     | Infraestrutura essencial
+infra/             | Infraestrutura essencial
 shared/             | Código reutilizável
 config/             | Configurações
 ```

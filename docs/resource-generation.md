@@ -73,7 +73,7 @@ npm run generate:resource -- users products orders
 
 ### Com Categoria
 
-Para organizar os resources em uma categoria (como `core`, `user-management`, etc.):
+Para organizar os resources em uma categoria (como `core`, `accounts`, etc.):
 
 ```bash
 npm run generate:resource -- users --category=core
@@ -86,10 +86,10 @@ Isso criará os arquivos em `src/features/core/users/` ao invés de `src/feature
 Para especificar um caminho completo diferente:
 
 ```bash
-npm run generate:resource -- users --feature-path=src/features/user-management
+npm run generate:resource -- users --feature-path=src/features/accounts
 ```
 
-Isso criará os arquivos em `src/features/user-management/users/`.
+Isso criará os arquivos em `src/features/accounts/users/`.
 
 ### Exemplo Combinado
 
@@ -156,7 +156,7 @@ Para cada tabela, o script gera:
    Edite `src/app.module.ts`:
 
    ```typescript
-   import { UsersModule } from './features/core/users/users.module';
+   import { UsersModule } from './features/accounts/users/users.module';
 
    @Module({
      imports: [
@@ -193,7 +193,7 @@ O gerador faz suposições razoáveis, mas você pode precisar ajustar:
 
 ```bash
 # Gerar resources para várias tabelas em categorias diferentes
-npm run generate:resource -- users roles --category=user-management
+npm run generate:resource -- users roles --category=accounts
 npm run generate:resource -- products categories --category=core
 npm run generate:resource -- orders order-items --category=sales
 

@@ -23,7 +23,7 @@ nest g interceptor shared/interceptors/logging
 nest g decorator shared/decorators/current-user
 
 # Gerar infraestrutura
-nest g module infrastructure/database
-nest g service infrastructure/logging/logger
-nest g module infrastructure/cache
+nest g module infra/database
+nest g service infra/logging/logger
+nest g module infra/cache
 ```
