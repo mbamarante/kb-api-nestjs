@@ -1,0 +1,13 @@
+{
+	"version": "2.0.0",
+	"tasks": [		
+		{
+			"type": "process",
+			"command": "pnpm",
+			"args": ["run", "start:dev"],
+			"label": "🐈 pnpm: start:dev (hot reload)",
+			"detail": "pnpm run start:dev -- -b swc",
+			"problemMatcher": []
+		}
+	]
+}

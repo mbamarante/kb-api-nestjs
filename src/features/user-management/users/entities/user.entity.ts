@@ -35,6 +35,9 @@ export class User {
   @JoinColumn({ name: 'last_championship_id' })
   championship: Championship | null;
 
+  @Column({ name: 'last_championship_id', type: 'bigint', nullable: true })
+  lastChampionshipId: number | null;
+
   @ManyToOne(() => Promoter, { nullable: true, eager: false })
   @JoinColumn({ name: 'promoter_id' })
   promoter: Promoter | null;
@@ -51,9 +54,9 @@ export class User {
   @Column({ type: 'smallint', default: 0 })
   isDisplayboard: number;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp' })
+  @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp' })
+  @UpdateDateColumn({ type: 'timestamp' })
   updatedAt: Date;
 }

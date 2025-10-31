@@ -14,7 +14,7 @@ export class Championship {
   id: number;
 
   @ManyToOne(() => Promoter, { nullable: false, eager: false })
-  @JoinColumn({ name: 'promoter_id' })
+  @JoinColumn()
   promoter: Promoter;
 
   @Column()

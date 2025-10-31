@@ -266,12 +266,14 @@ class ResourceGenerator {
         const relationshipName = this.toCamelCase(refClassName);
 
         // Generate ManyToOne relationship
+        // Usar o nome original da coluna do MySQL para manter compatibilidade
         entityCode += `  @ManyToOne(() => ${refClassName}, { nullable: ${isNullable}, eager: false })\n`;
         entityCode += `  @JoinColumn({ name: '${col.Field}' })\n`;
         entityCode += `  ${relationshipName}: ${refClassName};\n\n`;
 
         // Also keep the FK column for direct access if needed
-        const fkOptions: string[] = [];
+        // Usar o nome original da coluna do MySQL
+        const fkOptions: string[] = [`name: '${col.Field}'`];
         if (
           ormType !== 'varchar' &&
           ormType !== 'bigint' &&
@@ -281,7 +283,7 @@ class ResourceGenerator {
         }
         if (isNullable) fkOptions.push(`nullable: true`);
 
-        entityCode += `  @Column(${fkOptions.length > 0 ? `{ ${fkOptions.join(', ')} }` : ''})\n`;
+        entityCode += `  @Column({ ${fkOptions.join(', ')} })\n`;
         entityCode += `  ${columnName}: ${tsType};\n\n`;
       } else {
         // Regular column
