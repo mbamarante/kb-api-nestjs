@@ -510,7 +510,7 @@ async function main() {
   const tables = args.filter((arg) => !arg.startsWith('--'));
   const schemasMap = new Map<string, string>();
 
-  // Parse schema mappings: --schema=users:user_management
+  // Parse schema mappings: --schema=users:accounts
   args
     .filter((arg) => arg.startsWith('--schema='))
     .forEach((arg) => {

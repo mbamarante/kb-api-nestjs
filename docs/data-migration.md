@@ -49,13 +49,13 @@ npm run migrate:data -- users championships promoters
 Se suas tabelas estão em schemas diferentes no PostgreSQL:
 
 ```bash
-npm run migrate:data -- users championships --schema=users:user_management --schema=championships:core
+npm run migrate:data -- users championships --schema=users:accounts --schema=championships:core
 ```
 
 Exemplo completo:
 
 ```bash
-npm run migrate:data -- users championships promoters --schema=users:user_management --schema=championships:core --schema=promoters:core
+npm run migrate:data -- users championships promoters --schema=users:accounts --schema=championships:core --schema=promoters:core
 ```
 
 ## Como Funciona
@@ -88,7 +88,7 @@ npm run migrate:data -- users championships promoters --schema=users:user_manage
   ⏳ Progress: 25/25 rows processed
   ✅ Completed: 25 inserted, 0 errors
 
-📊 Migrating table: users (→ user_management.users)
+📊 Migrating table: users (→ accounts.users)
   📦 Found 150 rows
   ⏳ Progress: 150/150 rows processed
   ✅ Completed: 150 inserted, 0 errors

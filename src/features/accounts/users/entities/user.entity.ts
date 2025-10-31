@@ -11,7 +11,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('users', { schema: 'user_management' })
+@Entity('users', { schema: 'accounts' })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

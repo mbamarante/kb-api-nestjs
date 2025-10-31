@@ -1,6 +1,6 @@
 -- Criar schemas para organização
 CREATE SCHEMA IF NOT EXISTS core;
-CREATE SCHEMA IF NOT EXISTS user_management;
+CREATE SCHEMA IF NOT EXISTS accounts;
 CREATE SCHEMA IF NOT EXISTS geo;
 
 -- Extensões úteis
@@ -21,11 +21,11 @@ END
 $$;
 
 GRANT CONNECT ON DATABASE kb TO kb_app;
-GRANT USAGE ON SCHEMA core, user_management, geo TO kb_app;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA core, user_management, geo TO kb_app;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA core, user_management, geo TO kb_app;
+GRANT USAGE ON SCHEMA core, accounts, geo TO kb_app;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA core, accounts, geo TO kb_app;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA core, accounts, geo TO kb_app;
 
 -- Garantir permissões futuras
 ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON TABLES TO kb_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA user_management GRANT ALL ON TABLES TO kb_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA accounts GRANT ALL ON TABLES TO kb_app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA geo GRANT ALL ON TABLES TO kb_app;

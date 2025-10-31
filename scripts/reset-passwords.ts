@@ -25,10 +25,9 @@ async function resetPasswords() {
     console.log('✅ Hash generated:', hashedPassword.substring(0, 30) + '...');
 
     console.log('\n🔄 Resetting passwords in database...');
-    const result = await pool.query(
-      `UPDATE user_management.users SET password = $1`,
-      [hashedPassword],
-    );
+    const result = await pool.query(`UPDATE accounts.users SET password = $1`, [
+      hashedPassword,
+    ]);
 
     console.log(
       `\n✅ Successfully reset ${result.rowCount} user password(s) to "${defaultPassword}"`,
